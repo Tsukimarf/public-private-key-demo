@@ -1,0 +1,187 @@
+{
+  "comment": "Public/Private Key Demo — Complete JSON Data Structures",
+
+  "schemas": {
+    "keyPair": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "KeyPair",
+      "type": "object",
+      "required": ["privateKey", "publicKey", "curve", "createdAt"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique record identifier"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable name for this key"
+        },
+        "privateKey": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "256-bit private key in hex — KEEP SECRET"
+        },
+        "publicKey": {
+          "type": "string",
+          "pattern": "^04[0-9a-f]{128}$",
+          "description": "Uncompressed secp256k1 public key (04 prefix + x + y)"
+        },
+        "curve": {
+          "type": "string",
+          "enum": ["secp256k1", "p-256", "p-384", "ed25519"],
+          "default": "secp256k1"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "signature": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ECDSASignature",
+      "type": "object",
+      "required": ["algorithm", "r", "s"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["ECDSA-secp256k1", "ECDSA-p256", "EdDSA-ed25519"]
+        },
+        "r": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Signature r component (32 bytes hex)"
+        },
+        "s": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Signature s component (32 bytes hex)"
+        },
+        "v": {
+          "type": "integer",
+          "enum": [27, 28],
+          "description": "Recovery id (Ethereum-compatible)"
+        },
+        "der": {
+          "type": "string",
+          "description": "DER-encoded signature (hex)"
+        }
+      }
+    },
+
+    "signedTransaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SignedTransaction",
+      "type": "object",
+      "required": ["transaction", "hash", "signature", "publicKey"],
+      "properties": {
+        "transaction": {
+          "type": "object",
+          "required": ["from", "to", "amount", "timestamp"],
+          "properties": {
+            "id":        { "type": "string" },
+            "from":      { "type": "string", "description": "Sender public key or address" },
+            "to":        { "type": "string", "description": "Recipient address" },
+            "amount":    { "type": "number", "minimum": 0 },
+            "currency":  { "type": "string" },
+            "timestamp": { "type": "string", "format": "date-time" },
+            "memo":      { "type": "string" }
+          }
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the serialized transaction"
+        },
+        "signature": { "$ref": "#/schemas/signature" },
+        "publicKey":  { "type": "string" },
+        "verified":   { "type": "boolean" }
+      }
+    },
+
+    "keyDatabase": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "KeyDatabase",
+      "type": "object",
+      "properties": {
+        "version": { "type": "integer", "enum": [1] },
+        "keys": {
+          "type": "array",
+          "items": { "$ref": "#/schemas/keyPair" }
+        }
+      }
+    }
+  },
+
+  "sampleData": {
+    "keyDatabase": {
+      "version": 1,
+      "keys": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "label": "Alice main wallet",
+          "privateKey": "18e14a7b6a307f426a94f8114701e7c8e774e7f9a47e2c2035db29a206321725",
+          "publicKey": "0450863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b23522cd470243453a299fa9e77237716103abc11a1df38855ed6f2ee187e9c582ba6",
+          "curve": "secp256k1",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "tags": ["bitcoin", "main", "hot-wallet"]
+        },
+        {
+          "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+          "label": "Bob cold storage",
+          "privateKey": "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d",
+          "publicKey": "04d0de0aaeaefad02b8bdc8a01a1b8b11c696bd3d66a2c5f10780d95b7df42645cd85228a6fb29940e858e7e55842ae2bd115d1ed7cc0e82d934e929c97648cb0d",
+          "curve": "secp256k1",
+          "createdAt": "2026-01-15T12:00:00.000Z",
+          "tags": ["bitcoin", "cold", "hardware"]
+        }
+      ]
+    },
+
+    "signedTransaction": {
+      "transaction": {
+        "id": "tx-2026-001",
+        "from": "0450863ad64a87ae...",
+        "to": "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+        "amount": 1.0,
+        "currency": "BTC",
+        "timestamp": "2026-04-18T09:00:00.000Z",
+        "memo": "Payment for services"
+      },
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signature": {
+        "algorithm": "ECDSA-secp256k1",
+        "r": "7de1f9d3a4b8c2e1f5a9b3c7d8e2f4a1b6c9d3e7f2a5b8c1d4e7f0a3b6c9d2",
+        "s": "3bc982a1f4e7d0c3b6a9f2e5d8c1b4a7f0e3d6c9b2a5f8e1d4c7b0a3f6e9d2",
+        "v": 27,
+        "der": "3044022..."
+      },
+      "publicKey": "0450863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b235",
+      "verified": true
+    },
+
+    "blockchainBlock": {
+      "index": 42,
+      "previousHash": "0000abc123def456...",
+      "timestamp": "2026-04-18T09:01:00.000Z",
+      "transactions": [
+        {
+          "txId": "tx-2026-001",
+          "from": "0450863ad64a87ae...",
+          "to": "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+          "amount": 1.0,
+          "signatureValid": true
+        }
+      ],
+      "merkleRoot": "abc123def456...",
+      "nonce": 98765,
+      "hash": "0000def456abc123..."
+    }
+  }
+}
